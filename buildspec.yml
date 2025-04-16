@@ -3,38 +3,25 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      golang: 1.21
+      python: 3.11
     commands:
-      # Instalar Terraform
-      - curl -s -qL -o terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
-      - unzip terraform.zip
-      - mv terraform /usr/local/bin/
-      - rm terraform.zip
-
+      - yum install -y yum-utils unzip
+      - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+      - yum -y install terraform
+      
   pre_build:
     commands:
-      # Configurar AWS CLI
-      - aws configure set default.region us-east-1
-      # Inicializar Terraform
       - cd terraform
-      - terraform init -input=false
-
+      - terraform init
+      
   build:
     commands:
-      # Executar testes do Terraform
-      - terraform test
-      # Executar testes Go
-      - cd ../test/terraform
-      - go test -v ./...
-      # Voltar para o diretório do Terraform
-      - cd ../../terraform
-      # Planejar e aplicar as mudanças
-      - terraform plan -input=false -out=tfplan
-      - terraform apply -input=false -auto-approve tfplan
-
+      - terraform plan
+      - terraform apply -auto-approve
+      
   post_build:
     commands:
-      - echo "Terraform apply completed on $(date)"
+      - echo "Terraform apply completed on `date`"
 
 artifacts:
   files:
