@@ -1,0 +1,43 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      golang: 1.21
+    commands:
+      # Instalar Terraform
+      - curl -s -qL -o terraform.zip "https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip"
+      - unzip terraform.zip
+      - mv terraform /usr/local/bin/
+      - rm terraform.zip
+
+  pre_build:
+    commands:
+      # Configurar AWS CLI
+      - aws configure set default.region us-east-1
+      # Inicializar Terraform
+      - cd terraform
+      - terraform init -input=false
+
+  build:
+    commands:
+      # Executar testes do Terraform
+      - terraform test
+      # Executar testes Go
+      - cd ../test/terraform
+      - go test -v ./...
+      # Voltar para o diretório do Terraform
+      - cd ../../terraform
+      # Planejar e aplicar as mudanças
+      - terraform plan -input=false -out=tfplan
+      - terraform apply -input=false -auto-approve tfplan
+
+  post_build:
+    commands:
+      - echo "Terraform apply completed on $(date)"
+
+artifacts:
+  files:
+    - terraform/tfplan
+    - terraform/*.tf
+  discard-paths: no 
