@@ -30,31 +30,18 @@ resource "aws_iam_role_policy" "codepipeline_policy" {
           "s3:GetObject",
           "s3:GetObjectVersion",
           "s3:GetBucketVersioning",
-          "s3:PutObject"
+          "s3:PutObject",
+          "s3:ListBucket",
+          "codebuild:BatchGetBuilds",
+          "codebuild:StartBuild",
+          "codestar-connections:UseConnection"
         ]
         Resource = [
           aws_s3_bucket.artifact_store.arn,
-          "${aws_s3_bucket.artifact_store.arn}/*"
+          "${aws_s3_bucket.artifact_store.arn}/*",
+          aws_codebuild_project.terraform_build.arn,
+          aws_codestarconnections_connection.github.arn
         ]
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "codecommit:CancelUploadArchive",
-          "codecommit:GetBranch",
-          "codecommit:GetCommit",
-          "codecommit:GetUploadArchiveStatus",
-          "codecommit:UploadArchive"
-        ]
-        Resource = "*"
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "codebuild:BatchGetBuilds",
-          "codebuild:StartBuild"
-        ]
-        Resource = "*"
       }
     ]
   })
