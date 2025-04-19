@@ -2,9 +2,9 @@ version: 0.2
 
 env:
   variables:
-    ENVIRONMENT: "dev"
-    TF_WORKSPACE: "dev"
-    TF_VAR_environment: "dev"
+    ENVIRONMENT: "prod"
+    TF_WORKSPACE: "prod"
+    TF_VAR_environment: "prod"
 
 phases:
   install:
@@ -30,13 +30,13 @@ phases:
       - checkov -d .
       - echo "Planejando mudanças..."
       - terraform plan -var-file="terraform.tfvars" -out=tfplan
-      - echo "Aplicando mudanças..."
-      - terraform apply -auto-approve tfplan
+      - echo "Aguardando aprovação manual..."
+      - echo "Para aplicar as mudanças, acesse o console do CodeBuild e aprove a etapa manual."
       
   post_build:
     commands:
-      - rm terraform.tfvars tfplan
-      - echo "Terraform apply completed on `date`"
+      - rm terraform.tfvars
+      - echo "Terraform plan completed on `date`"
       - echo "Estado do Terraform salvo no workspace ${TF_WORKSPACE}"
 
 artifacts:

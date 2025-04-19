@@ -1,0 +1,8 @@
+notification_email = "prod-alerts@company.com"
+ecs_cluster_name   = "prod-fargate-cluster"
+ecs_instance_type  = "t4g.large"
+budget_limit       = "1000"
+asg_min_size       = "2"
+asg_max_size       = "10"
+asg_desired_capacity = "3"
+asg_health_check_grace_period = "300" 
