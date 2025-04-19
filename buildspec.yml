@@ -5,46 +5,86 @@ env:
     ENVIRONMENT: "dev"
     TF_WORKSPACE: "dev"
     TF_VAR_environment: "dev"
+    OS_TYPE: "ubuntu"  # ou "amazon-linux"
 
 phases:
   install:
+    runtime-versions:
+      python: 3.9
     commands:
-      - yum update -y
-      - yum install -y yum-utils unzip python3 python3-pip jq
-      - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
-      - yum -y install terraform
+      - echo "Instalando dependências..."
+      - |
+        if [ "$OS_TYPE" = "ubuntu" ]; then
+          apt-get update && apt-get install -y unzip python3 python3-pip jq
+          curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
+          apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+          apt-get update && apt-get install -y terraform
+        else
+          yum update -y
+          yum install -y yum-utils unzip python3 python3-pip jq
+          yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+          yum -y install terraform
+        fi
       - pip3 install checkov
-      
+
   pre_build:
     commands:
+      - echo "Configurando ambiente..."
       - cd terraform
-      - aws ssm get-parameter --name "/terraform/vars/${ENVIRONMENT}" --with-decryption --query "Parameter.Value" --output text | jq -r 'to_entries | .[] | "\(.key) = \(.value)"' > terraform.tfvars
+      - echo "Recuperando parâmetros do Parameter Store..."
+      - |
+        # Parâmetros comuns
+        aws ssm get-parameter --name "/terraform/common/region" --query "Parameter.Value" --output text > terraform.tfvars
+        aws ssm get-parameter --name "/terraform/common/enable_cloudwatch" --query "Parameter.Value" --output text >> terraform.tfvars
+        aws ssm get-parameter --name "/terraform/common/enable_guardduty" --query "Parameter.Value" --output text >> terraform.tfvars
+        aws ssm get-parameter --name "/terraform/common/enable_security_hub" --query "Parameter.Value" --output text >> terraform.tfvars
+        aws ssm get-parameter --name "/terraform/common/vpc_cidr" --query "Parameter.Value" --output text >> terraform.tfvars
+        aws ssm get-parameter --name "/terraform/common/asg_desired_capacity" --query "Parameter.Value" --output text >> terraform.tfvars
+        aws ssm get-parameter --name "/terraform/common/asg_min_size" --query "Parameter.Value" --output text >> terraform.tfvars
+        aws ssm get-parameter --name "/terraform/common/asg_max_size" --query "Parameter.Value" --output text >> terraform.tfvars
+        aws ssm get-parameter --name "/terraform/common/instance_type" --query "Parameter.Value" --output text >> terraform.tfvars
+        aws ssm get-parameter --name "/terraform/common/public_subnet_cidrs" --query "Parameter.Value" --output text >> terraform.tfvars
+        aws ssm get-parameter --name "/terraform/common/private_subnet_cidrs" --query "Parameter.Value" --output text >> terraform.tfvars
+        
+        # Parâmetros específicos do ambiente
+        aws ssm get-parameter --name "/terraform/${ENVIRONMENT}/environment" --query "Parameter.Value" --output text >> terraform.tfvars
+        
+        # Parâmetros específicos de produção
+        if [ "$ENVIRONMENT" = "prod" ]; then
+          aws ssm get-parameter --name "/terraform/prod/enable_cloudtrail" --query "Parameter.Value" --output text >> terraform.tfvars
+          aws ssm get-parameter --name "/terraform/prod/enable_aws_config" --query "Parameter.Value" --output text >> terraform.tfvars
+          aws ssm get-parameter --name "/terraform/prod/enable_flow_logs" --query "Parameter.Value" --output text >> terraform.tfvars
+        fi
       - terraform init -input=false
       - terraform workspace select ${TF_WORKSPACE} || terraform workspace new ${TF_WORKSPACE}
-      
+
   build:
     commands:
-      - echo "Validando configuração do Terraform..."
+      - echo "Validando configuração..."
       - terraform validate
-      - echo "Verificando segurança da infraestrutura..."
       - checkov -d .
-      - echo "Planejando mudanças..."
-      - terraform plan -var-file="terraform.tfvars" -out=tfplan
-      - echo "Aplicando mudanças..."
-      - terraform apply -auto-approve tfplan
-      
+      - echo "Executando plano..."
+      - terraform plan -out=tfplan
+      - |
+        if [ "$ENVIRONMENT" = "prod" ]; then
+          echo "Aguardando aprovação manual para produção..."
+          # Aqui você pode adicionar lógica para aguardar aprovação manual
+        else
+          echo "Aplicando mudanças em desenvolvimento..."
+          terraform apply -auto-approve tfplan
+        fi
+
   post_build:
     commands:
-      - rm terraform.tfvars tfplan
-      - echo "Terraform apply completed on `date`"
-      - echo "Estado do Terraform salvo no workspace ${TF_WORKSPACE}"
+      - echo "Limpando arquivos temporários..."
+      - rm -f tfplan terraform.tfvars
+      - echo "Build finalizado em $(date)"
 
 artifacts:
   files:
-    - terraform/tfplan
-    - terraform/*.tf
-  discard-paths: no
+    - '**/*'
+  name: terraform-${ENVIRONMENT}-$(date +%Y%m%d-%H%M%S)
 
 cache:
   paths:
-    - /root/.terraform.d/plugin-cache/**/* 
+    - '/root/.terraform.d/**/*' 
