@@ -73,7 +73,7 @@ O projeto utiliza AWS CodePipeline para automatizar o processo de implantação,
 
 ### Disparando Mudanças em Produção
 
-Todas as mudanças em produção devem passar pelo pipeline de CI/CD para garantir a qualidade e segurança do ambiente.
+Todas as mudanças em produção devem passar pelo pipeline de CI/CD para garantir a qualidade e segurança do ambiente. Não é permitido fazer alterações diretas na branch master.
 
 1. **Fluxo de Implantação**
    - Após o sucesso do pipeline em dev, você receberá uma notificação SNS
@@ -205,7 +205,7 @@ Para testar as configurações localmente antes de enviar para o pipeline, siga 
        "notification_email": "seu-email@exemplo.com",
        "vpc_cidr": "10.0.0.0/16",
        "cluster_name": "dev-cluster",
-       "instance_type": "t3.medium",
+       "instance_type": "t4g.nano",
        "asg_min_size": "1",
        "asg_max_size": "3",
        "asg_desired_capacity": "2",
@@ -223,7 +223,7 @@ Para testar as configurações localmente antes de enviar para o pipeline, siga 
        "notification_email": "prod-alerts@exemplo.com",
        "vpc_cidr": "10.1.0.0/16",
        "cluster_name": "prod-cluster",
-       "instance_type": "t3.large",
+       "instance_type": "t4g.nano",
        "asg_min_size": "2",
        "asg_max_size": "5",
        "asg_desired_capacity": "3",
@@ -264,7 +264,7 @@ terraform/
 | vpc_id | ID da VPC onde o cluster será criado | string | - |
 | subnet_ids | Lista de IDs das subnets para o ASG | list(string) | - |
 | cluster_name | Nome do cluster ECS | string | - |
-| instance_type | Tipo de instância para o ASG | string | "t3.medium" |
+| instance_type | Tipo de instância para o ASG | string | "t4g.nano" |
 | asg_min_size | Número mínimo de instâncias no ASG | string | "1" |
 | asg_max_size | Número máximo de instâncias no ASG | string | "3" |
 | asg_desired_capacity | Capacidade desejada do ASG | string | "2" |
