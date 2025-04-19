@@ -11,15 +11,17 @@ phases:
   pre_build:
     commands:
       - cd terraform
+      - aws ssm get-parameter --name "/terraform/vars" --with-decryption --query "Parameter.Value" --output text > terraform.tfvars
       - terraform init
       
   build:
     commands:
-      - terraform plan
-      - terraform apply -auto-approve
+      - terraform plan -var-file="terraform.tfvars"
+      - terraform apply -var-file="terraform.tfvars" -auto-approve
       
   post_build:
     commands:
+      - rm terraform.tfvars
       - echo "Terraform apply completed on `date`"
 
 artifacts:
