@@ -4,14 +4,14 @@ phases:
   install:
     commands:
       - yum update -y
-      - yum install -y yum-utils unzip python3 python3-pip
+      - yum install -y yum-utils unzip python3 python3-pip jq
       - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
       - yum -y install terraform
       
   pre_build:
     commands:
       - cd terraform
-      - aws ssm get-parameter --name "/terraform/vars" --with-decryption --query "Parameter.Value" --output text > terraform.tfvars
+      - aws ssm get-parameter --name "/terraform/vars" --with-decryption --query "Parameter.Value" --output text | jq -r 'to_entries | .[] | "\(.key) = \(.value)"' > terraform.tfvars
       - terraform init
       
   build:
