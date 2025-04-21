@@ -1,1 +1,0 @@
-{"notification_email":"\"ciroprates@gmail.com\"","ecs_cluster_name":"\"fargate-spot-cluster\"","ecs_instance_type":"\"t4g.nano\"","budget_limit":"\"10\"","asg_min_size":"\"1\"","asg_max_size":"\"10\"","asg_desired_capacity":"\"1\"","asg_health_check_grace_period":"\"300\""}

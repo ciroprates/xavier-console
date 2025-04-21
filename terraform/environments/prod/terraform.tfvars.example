@@ -1,8 +1,24 @@
-notification_email = "prod-alerts@company.com"
-ecs_cluster_name   = "prod-fargate-cluster"
-ecs_instance_type  = "t4g.large"
+# Configurações da VPC
+vpc_cidr             = "10.0.0.0/16"
+public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24"]
+private_subnet_cidrs = ["10.0.101.0/24", "10.0.102.0/24"]
+availability_zones   = ["us-east-1a", "us-east-1b"]
+
+# Configurações do ECS
+ecs_cluster_name                = "prod-cluster"
+ecs_instance_type              = "t3.medium"
+asg_min_size                   = "2"
+asg_max_size                   = "4"
+asg_desired_capacity           = "2"
+asg_health_check_grace_period  = "300"
+
+# Configurações de Monitoramento
 budget_limit       = "1000"
-asg_min_size       = "2"
-asg_max_size       = "10"
-asg_desired_capacity = "3"
-asg_health_check_grace_period = "300" 
+notification_email = "alerts@example.com"
+
+# Configurações do CICD
+artifact_bucket           = "prod-artifacts-bucket"
+repository_name           = "prod-repository"
+build_project_name        = "prod-build"
+deploy_project_name       = "prod-deploy"
+approval_notification_arn = "arn:aws:sns:us-east-1:123456789012:approval-notifications" 

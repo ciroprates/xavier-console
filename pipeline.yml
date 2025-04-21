@@ -29,22 +29,7 @@ Resources:
         - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
         - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
 
-  DevBuildProject:
-    Type: AWS::CodeBuild::Project
-    Properties:
-      Name: terraform-dev-build
-      ServiceRole: !GetAtt CodeBuildRole.Arn
-      Artifacts:
-        Type: CODEPIPELINE
-      Environment:
-        Type: LINUX_CONTAINER
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
-      Source:
-        Type: CODEPIPELINE
-        BuildSpec: buildspec.yml
-
-  ProdBuildProject:
+  BuildProject:
     Type: AWS::CodeBuild::Project
     Properties:
       Name: terraform-prod-build
@@ -55,9 +40,16 @@ Resources:
         Type: LINUX_CONTAINER
         ComputeType: BUILD_GENERAL1_SMALL
         Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        EnvironmentVariables:
+          - Name: ENVIRONMENT
+            Value: prod
+          - Name: TF_WORKSPACE
+            Value: prod
+          - Name: TF_VAR_environment
+            Value: prod
       Source:
         Type: CODEPIPELINE
-        BuildSpec: buildspec.prod.yml
+        BuildSpec: buildspec.yml
 
   Pipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -80,50 +72,37 @@ Resources:
                 RepositoryName: !Ref RepositoryName
                 BranchName: main
               OutputArtifacts:
-                - Name: SourceOutput
+                - Name: SourceArtifact
               RunOrder: 1
 
-        - Name: Dev
+        - Name: Build
           Actions:
-            - Name: DevBuild
+            - Name: Build
               ActionTypeId:
                 Category: Build
                 Owner: AWS
                 Version: 1
                 Provider: CodeBuild
               Configuration:
-                ProjectName: !Ref DevBuildProject
+                ProjectName: !Ref BuildProject
               InputArtifacts:
-                - Name: SourceOutput
+                - Name: SourceArtifact
               OutputArtifacts:
-                - Name: DevBuildOutput
+                - Name: BuildArtifact
               RunOrder: 1
 
-        - Name: Approval
+        - Name: Deploy
           Actions:
-            - Name: ManualApproval
-              ActionTypeId:
-                Category: Approval
-                Owner: AWS
-                Version: 1
-                Provider: Manual
-              Configuration:
-                NotificationArn: !Ref ApprovalTopic
-                CustomData: Aprovar mudanças para produção?
-              RunOrder: 1
-
-        - Name: Prod
-          Actions:
-            - Name: ProdBuild
+            - Name: Deploy
               ActionTypeId:
                 Category: Build
                 Owner: AWS
                 Version: 1
                 Provider: CodeBuild
               Configuration:
-                ProjectName: !Ref ProdBuildProject
+                ProjectName: !Ref BuildProject
               InputArtifacts:
-                - Name: DevBuildOutput
+                - Name: BuildArtifact
               RunOrder: 1
 
   ArtifactBucket:
@@ -143,3 +122,55 @@ Parameters:
   RepositoryName:
     Type: String
     Description: Nome do repositório CodeCommit 
+
+version: 0.2
+
+stages:
+  - name: Source
+    actions:
+      - name: Source
+        actionTypeId:
+          category: Source
+          owner: AWS
+          provider: CodeCommit
+          version: 1
+        configuration:
+          RepositoryName: !Ref RepositoryName
+          BranchName: main
+        outputArtifacts:
+          - name: SourceArtifact
+        runOrder: 1
+
+  - name: Build
+    actions:
+      - name: Build
+        actionTypeId:
+          category: Build
+          owner: AWS
+          provider: CodeBuild
+          version: 1
+        configuration:
+          ProjectName: !Ref BuildProject
+        inputArtifacts:
+          - name: SourceArtifact
+        outputArtifacts:
+          - name: BuildArtifact
+        runOrder: 1
+
+  - name: Deploy
+    actions:
+      - name: Deploy
+        actionTypeId:
+          category: Build
+          owner: AWS
+          provider: CodeBuild
+          version: 1
+        configuration:
+          ProjectName: !Ref BuildProject
+        inputArtifacts:
+          - name: BuildArtifact
+        runOrder: 1
+
+artifacts:
+  - name: SourceArtifact
+  - name: BuildArtifact 
