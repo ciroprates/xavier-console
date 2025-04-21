@@ -13,53 +13,59 @@ provider "aws" {
 }
 
 # Criamos a VPC
-module "vpc" {
+module "network" {
   source = "../../modules/network"
 
   vpc_cidr             = var.vpc_cidr
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
-  availability_zones   = var.availability_zones
 }
 
 # Criamos o ECS
 module "ecs" {
   source = "../../modules/ecs"
 
-  vpc_id              = module.vpc.vpc_id
-  public_subnet_ids   = module.vpc.public_subnet_ids
-  private_subnet_ids  = module.vpc.private_subnet_ids
+  vpc_id              = module.network.vpc_id
+  public_subnet_ids   = module.network.public_subnet_ids
+  private_subnet_ids  = module.network.private_subnet_ids
   ecs_cluster_name    = var.ecs_cluster_name
-  ecs_instance_type   = var.ecs_instance_type
-  asg_min_size        = var.asg_min_size
-  asg_max_size        = var.asg_max_size
-  asg_desired_capacity = var.asg_desired_capacity
-  asg_health_check_grace_period = var.asg_health_check_grace_period
+  ecs_service_name    = var.ecs_service_name
+  ecs_task_family     = var.ecs_task_family
+  container_port      = var.container_port
+  host_port           = var.host_port
+  container_name      = var.container_name
+  container_image     = var.container_image
+  min_capacity        = var.min_capacity
+  max_capacity        = var.max_capacity
+  desired_capacity    = var.desired_capacity
+  task_execution_role_arn = module.iam.ecs_task_execution_role_arn
+  autoscale_role_arn      = module.iam.ecs_autoscale_role_arn
+  ecs_instance_profile_name = module.iam.ecs_instance_profile_name
 }
 
 # Criamos o monitoramento
 module "monitoring" {
   source = "../../modules/monitoring"
 
-  budget_limit       = var.budget_limit
-  notification_email = var.notification_email
+  budget_amount   = var.budget_amount
+  email_addresses = var.email_addresses
 }
 
 # Criamos o IAM
 module "iam" {
   source = "../../modules/iam"
 
-  artifact_bucket_arn = var.artifact_bucket_arn
+  artifact_bucket = var.artifact_bucket
 }
 
 # Criamos o CI/CD
 module "cicd" {
   source = "../../modules/cicd"
 
-  pipeline_role_arn = module.iam.pipeline_role_arn
-  artifact_bucket   = var.artifact_bucket
-  repository_name   = var.repository_name
-  build_project_name = var.build_project_name
-  deploy_project_name = var.deploy_project_name
-  approval_notification_arn = var.approval_notification_arn
+  artifact_bucket       = var.artifact_bucket
+  repository_name       = var.repository_name
+  github_owner         = var.github_owner
+  github_token         = var.github_token
+  codepipeline_role_arn = module.iam.codepipeline_role_arn
+  codebuild_role_arn    = module.iam.codebuild_role_arn
 } 

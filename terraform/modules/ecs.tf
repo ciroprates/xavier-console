@@ -9,7 +9,7 @@ resource "aws_launch_configuration" "ecs" {
   image_id            = data.aws_ami.ecs.id
   instance_type       = var.ecs_instance_type
   security_groups     = [aws_security_group.ecs.id]
-  iam_instance_profile = aws_iam_instance_profile.ecs.name
+  iam_instance_profile = var.ecs_instance_profile_name
   user_data           = <<-EOF
     #!/bin/bash
     echo ECS_CLUSTER=${var.ecs_cluster_name} >> /etc/ecs/ecs.config
@@ -60,62 +60,6 @@ resource "aws_security_group" "ecs" {
   }
 }
 
-# Criar IAM role para o ECS
-resource "aws_iam_role" "ecs" {
-  name = "ecs-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ec2.amazonaws.com"
-        }
-      }
-    ]
-  })
-}
-
-# Criar IAM instance profile para o ECS
-resource "aws_iam_instance_profile" "ecs" {
-  name = "ecs-instance-profile"
-  role = aws_iam_role.ecs.name
-}
-
-# Criar IAM policy para o ECS
-resource "aws_iam_role_policy" "ecs" {
-  name = "ecs-policy"
-  role = aws_iam_role.ecs.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = [
-          "ecs:CreateCluster",
-          "ecs:DeregisterContainerInstance",
-          "ecs:DiscoverPollEndpoint",
-          "ecs:Poll",
-          "ecs:RegisterContainerInstance",
-          "ecs:StartTelemetrySession",
-          "ecs:Submit*",
-          "ecs:StartTask",
-          "ecr:GetAuthorizationToken",
-          "ecr:BatchCheckLayerAvailability",
-          "ecr:GetDownloadUrlForLayer",
-          "ecr:BatchGetImage",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ]
-        Effect   = "Allow"
-        Resource = "*"
-      }
-    ]
-  })
-}
-
 # Data source para AMI do ECS
 data "aws_ami" "ecs" {
   most_recent = true
@@ -130,4 +74,50 @@ data "aws_ami" "ecs" {
     name   = "virtualization-type"
     values = ["hvm"]
   }
+}
+
+# Variáveis
+variable "vpc_id" {
+  description = "ID da VPC"
+  type        = string
+}
+
+variable "private_subnet_ids" {
+  description = "IDs das subnets privadas"
+  type        = list(string)
+}
+
+variable "ecs_cluster_name" {
+  description = "Nome do cluster ECS"
+  type        = string
+}
+
+variable "ecs_instance_type" {
+  description = "Tipo de instância EC2 para o ECS"
+  type        = string
+}
+
+variable "asg_min_size" {
+  description = "Tamanho mínimo do Auto Scaling Group"
+  type        = string
+}
+
+variable "asg_max_size" {
+  description = "Tamanho máximo do Auto Scaling Group"
+  type        = string
+}
+
+variable "asg_desired_capacity" {
+  description = "Capacidade desejada do Auto Scaling Group"
+  type        = string
+}
+
+variable "asg_health_check_grace_period" {
+  description = "Período de carência para health check"
+  type        = string
+}
+
+variable "ecs_instance_profile_name" {
+  description = "Nome do instance profile do ECS"
+  type        = string
 } 

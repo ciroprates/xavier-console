@@ -8,7 +8,7 @@ resource "aws_codecommit_repository" "main" {
 resource "aws_codebuild_project" "build" {
   name          = var.build_project_name
   description   = "Projeto para build"
-  service_role  = var.pipeline_role_arn
+  service_role  = var.codebuild_role_arn
   build_timeout = "5"
 
   artifacts {
@@ -37,7 +37,7 @@ resource "aws_codebuild_project" "build" {
 resource "aws_codebuild_project" "deploy" {
   name          = var.deploy_project_name
   description   = "Projeto para deploy"
-  service_role  = var.pipeline_role_arn
+  service_role  = var.codebuild_role_arn
   build_timeout = "5"
 
   artifacts {
@@ -62,10 +62,10 @@ resource "aws_codebuild_project" "deploy" {
   }
 }
 
-# Criar pipeline
-resource "aws_codepipeline" "main" {
-  name     = "main-pipeline"
-  role_arn = var.pipeline_role_arn
+# Pipeline de CI/CD
+resource "aws_codepipeline" "terraform_pipeline" {
+  name     = "terraform-infrastructure-pipeline"
+  role_arn = var.codepipeline_role_arn
 
   artifact_store {
     location = var.artifact_bucket
@@ -78,14 +78,16 @@ resource "aws_codepipeline" "main" {
     action {
       name             = "Source"
       category         = "Source"
-      owner            = "AWS"
-      provider         = "CodeCommit"
+      owner            = "ThirdParty"
+      provider         = "GitHub"
       version          = "1"
-      output_artifacts = ["source_output"]
+      output_artifacts = ["SourceArtifact"]
 
       configuration = {
-        RepositoryName = aws_codecommit_repository.main.repository_name
-        BranchName     = "main"
+        Owner      = var.github_owner
+        Repo       = var.repository_name
+        Branch     = "main"
+        OAuthToken = var.github_token
       }
     }
   }
@@ -98,12 +100,12 @@ resource "aws_codepipeline" "main" {
       category         = "Build"
       owner            = "AWS"
       provider         = "CodeBuild"
-      input_artifacts  = ["source_output"]
-      output_artifacts = ["build_output"]
       version          = "1"
+      input_artifacts  = ["SourceArtifact"]
+      output_artifacts = ["BuildArtifact"]
 
       configuration = {
-        ProjectName = aws_codebuild_project.build.name
+        ProjectName = aws_codebuild_project.terraform_build.name
       }
     }
   }
@@ -116,12 +118,77 @@ resource "aws_codepipeline" "main" {
       category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
-      input_artifacts = ["build_output"]
       version         = "1"
+      input_artifacts = ["BuildArtifact"]
 
       configuration = {
-        ProjectName = aws_codebuild_project.deploy.name
+        ProjectName = aws_codebuild_project.terraform_build.name
       }
     }
   }
+}
+
+# Projeto CodeBuild
+resource "aws_codebuild_project" "terraform_build" {
+  name          = "terraform-prod-build"
+  service_role  = var.codebuild_role_arn
+  build_timeout = "5"
+
+  artifacts {
+    type = "CODEPIPELINE"
+  }
+
+  environment {
+    compute_type    = "BUILD_GENERAL1_SMALL"
+    image           = "aws/codebuild/amazonlinux2-x86_64-standard:3.0"
+    type            = "LINUX_CONTAINER"
+    privileged_mode = true
+
+    environment_variable {
+      name  = "ENVIRONMENT"
+      value = "prod"
+    }
+
+    environment_variable {
+      name  = "TF_WORKSPACE"
+      value = "prod"
+    }
+  }
+
+  source {
+    type      = "CODEPIPELINE"
+    buildspec = file("${path.module}/../../buildspec.yml")
+  }
+}
+
+# Variáveis
+variable "artifact_bucket" {
+  description = "Nome do bucket S3 para artefatos"
+  type        = string
+}
+
+variable "repository_name" {
+  description = "Nome do repositório GitHub"
+  type        = string
+}
+
+variable "github_owner" {
+  description = "Nome do dono do repositório GitHub"
+  type        = string
+}
+
+variable "github_token" {
+  description = "Token de acesso do GitHub"
+  type        = string
+  sensitive   = true
+}
+
+variable "codepipeline_role_arn" {
+  description = "ARN da role do CodePipeline"
+  type        = string
+}
+
+variable "codebuild_role_arn" {
+  description = "ARN da role do CodeBuild"
+  type        = string
 } 
