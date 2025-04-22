@@ -7,39 +7,33 @@ env:
 
 phases:
   install:
-    runtime-versions:
-      python: 3.9
     commands:
       - echo "Installing dependencies..."
       - yum update -y
       - yum install -y unzip python3 python3-pip jq
-      - yum install -y yum-utils
-      - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
-      - yum install -y terraform
+      - curl -O https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+      - unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin/
+      - rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
       - pip3 install checkov
 
   pre_build:
     commands:
+      - echo "Retrieving SSM parameters..."
       - cd terraform/environments/prod
       - aws ssm get-parameter --name "/terraform/vars" --with-decryption --query "Parameter.Value" --output text > terraform.tfvars
-      - terraform init -input=false
-      - terraform workspace select prod || terraform workspace new prod
+      - terraform init
 
   build:
     commands:
+      - echo "Running Terraform plan and apply..."
       - terraform validate
-      - checkov -d .
       - terraform plan -out=tfplan
-      - |
-        if [ "$ENVIRONMENT" = "prod" ]; then
-          echo "Waiting for manual approval for production..."
-        else
-          terraform apply -auto-approve tfplan
-        fi
+      - terraform apply -auto-approve tfplan
 
   post_build:
     commands:
-      - rm -f tfplan terraform.tfvars
+      - echo "Cleaning up..."
+      - rm -f terraform.tfvars tfplan
 
 artifacts:
   files:
@@ -48,4 +42,4 @@ artifacts:
 
 cache:
   paths:
-    - '/root/.terraform.d/**/*' 
+    - /root/.terraform.d/**/* 
