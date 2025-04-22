@@ -22,11 +22,9 @@ phases:
       - aws ssm get-parameter --name "/terraform/vars" --with-decryption --query "Parameter.Value" --output text > terraform.tfvars
       - terraform init -input=false
       - terraform workspace select prod || terraform workspace new prod
-      - aws ssm get-parameter --name "/prod/github/token" --with-decryption --query "Parameter.Value" --output text > github_token.txt
       - aws ssm get-parameter --name "/prod/github/owner" --with-decryption --query "Parameter.Value" --output text > github_owner.txt
-      - export TF_VAR_github_token=$(cat github_token.txt)
       - export TF_VAR_github_owner=$(cat github_owner.txt)
-      - rm github_token.txt github_owner.txt
+      - rm github_owner.txt
 
   build:
     commands:
