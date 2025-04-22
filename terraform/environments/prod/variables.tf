@@ -98,12 +98,6 @@ variable "github_owner" {
   type        = string
 }
 
-variable "github_token" {
-  description = "Token de acesso do GitHub"
-  type        = string
-  sensitive   = true
-}
-
 variable "build_project_name" {
   description = "Nome do projeto de build"
   type        = string
@@ -116,5 +110,35 @@ variable "deploy_project_name" {
 
 variable "approval_notification_arn" {
   description = "ARN do tópico SNS para notificações de aprovação"
+  type        = string
+}
+
+variable "target_group_arn" {
+  description = "ARN do target group existente"
+  type        = string
+}
+
+variable "ecs_role_name" {
+  description = "Nome do role ECS existente"
+  type        = string
+}
+
+variable "codepipeline_role_name" {
+  description = "Nome do role CodePipeline existente"
+  type        = string
+}
+
+variable "codebuild_role_name" {
+  description = "Nome do role CodeBuild existente"
+  type        = string
+}
+
+variable "ecs_task_execution_role_name" {
+  description = "Nome do role de execução de tasks ECS existente"
+  type        = string
+}
+
+variable "ecs_autoscale_role_name" {
+  description = "Nome do role de auto-scaling ECS existente"
   type        = string
 } 

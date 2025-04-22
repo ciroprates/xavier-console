@@ -43,6 +43,7 @@ module "ecs" {
   host_port              = var.host_port
   container_name         = var.container_name
   container_image        = var.container_image
+  target_group_arn       = var.target_group_arn
 }
 
 # Criamos o monitoramento
@@ -57,7 +58,12 @@ module "monitoring" {
 module "iam" {
   source = "../../modules/iam"
 
-  artifact_bucket = var.artifact_bucket
+  artifact_bucket                = var.artifact_bucket
+  ecs_role_name                 = var.ecs_role_name
+  codepipeline_role_name        = var.codepipeline_role_name
+  codebuild_role_name           = var.codebuild_role_name
+  ecs_task_execution_role_name  = var.ecs_task_execution_role_name
+  ecs_autoscale_role_name       = var.ecs_autoscale_role_name
 }
 
 # Criamos o CI/CD
@@ -67,7 +73,6 @@ module "cicd" {
   artifact_bucket       = var.artifact_bucket
   repository_name       = var.repository_name
   github_owner         = var.github_owner
-  github_token         = var.github_token
   codepipeline_role_arn = module.iam.codepipeline_role_arn
   codebuild_role_arn    = module.iam.codebuild_role_arn
   build_project_name    = var.build_project_name

@@ -3,17 +3,26 @@ resource "aws_ecs_cluster" "main" {
   name = var.ecs_cluster_name
 }
 
-# Criar launch configuration
-resource "aws_launch_configuration" "ecs" {
-  name_prefix          = "ecs-launch-config-"
-  image_id            = data.aws_ami.ecs.id
-  instance_type       = var.ecs_instance_type
-  security_groups     = [aws_security_group.ecs.id]
-  iam_instance_profile = var.ecs_instance_profile_name
-  user_data           = <<-EOF
+# Criar launch template
+resource "aws_launch_template" "ecs" {
+  name_prefix   = "ecs-launch-template-"
+  image_id      = data.aws_ami.ecs.id
+  instance_type = var.ecs_instance_type
+
+  network_interfaces {
+    associate_public_ip_address = false
+    security_groups            = [aws_security_group.ecs.id]
+  }
+
+  iam_instance_profile {
+    name = var.ecs_instance_profile_name
+  }
+
+  user_data = base64encode(<<-EOF
     #!/bin/bash
     echo ECS_CLUSTER=${var.ecs_cluster_name} >> /etc/ecs/ecs.config
   EOF
+  )
 
   lifecycle {
     create_before_destroy = true
@@ -22,12 +31,16 @@ resource "aws_launch_configuration" "ecs" {
 
 # Criar Auto Scaling Group
 resource "aws_autoscaling_group" "ecs" {
-  name                 = "ecs-asg"
-  launch_configuration = aws_launch_configuration.ecs.name
-  vpc_zone_identifier  = var.private_subnet_ids
-  min_size            = var.min_capacity
-  max_size            = var.max_capacity
-  desired_capacity    = var.desired_capacity
+  name                = "ecs-asg"
+  vpc_zone_identifier = var.private_subnet_ids
+  min_size           = var.min_capacity
+  max_size           = var.max_capacity
+  desired_capacity   = var.desired_capacity
+
+  launch_template {
+    id      = aws_launch_template.ecs.id
+    version = "$Latest"
+  }
 
   health_check_type         = "EC2"
   health_check_grace_period = "300"
@@ -60,15 +73,6 @@ resource "aws_security_group" "ecs" {
   }
 }
 
-# Criar Application Load Balancer
-resource "aws_lb" "ecs" {
-  name               = "ecs-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [aws_security_group.alb.id]
-  subnets           = var.public_subnet_ids
-}
-
 # Security group para o ALB
 resource "aws_security_group" "alb" {
   name        = "alb-security-group"
@@ -87,32 +91,6 @@ resource "aws_security_group" "alb" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-}
-
-# Criar target group
-resource "aws_lb_target_group" "ecs" {
-  name     = "ecs-target-group"
-  port     = var.host_port
-  protocol = "HTTP"
-  vpc_id   = var.vpc_id
-
-  health_check {
-    path                = "/"
-    healthy_threshold   = 2
-    unhealthy_threshold = 10
-  }
-}
-
-# Criar listener
-resource "aws_lb_listener" "ecs" {
-  load_balancer_arn = aws_lb.ecs.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.ecs.arn
   }
 }
 
@@ -149,12 +127,10 @@ resource "aws_ecs_service" "app" {
   desired_count   = var.desired_capacity
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.ecs.arn
+    target_group_arn = var.target_group_arn
     container_name   = var.container_name
     container_port   = var.container_port
   }
-
-  depends_on = [aws_lb_listener.ecs]
 }
 
 # Data source para AMI do ECS
@@ -257,5 +233,10 @@ variable "container_name" {
 
 variable "container_image" {
   description = "Imagem do container"
+  type        = string
+}
+
+variable "target_group_arn" {
+  description = "ARN do target group existente"
   type        = string
 } 

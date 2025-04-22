@@ -1,9 +1,3 @@
-# Criar repositório CodeCommit
-resource "aws_codecommit_repository" "main" {
-  repository_name = var.repository_name
-  description     = "Repositório principal"
-}
-
 # Criar projeto CodeBuild para build
 resource "aws_codebuild_project" "build" {
   name          = var.build_project_name
@@ -62,6 +56,12 @@ resource "aws_codebuild_project" "deploy" {
   }
 }
 
+# CodeStar Connection for GitHub
+resource "aws_codestarconnections_connection" "github" {
+  name          = "github-connection"
+  provider_type = "GitHub"
+}
+
 # Pipeline de CI/CD
 resource "aws_codepipeline" "terraform_pipeline" {
   name     = "terraform-infrastructure-pipeline"
@@ -78,16 +78,15 @@ resource "aws_codepipeline" "terraform_pipeline" {
     action {
       name             = "Source"
       category         = "Source"
-      owner            = "ThirdParty"
-      provider         = "GitHub"
+      owner            = "AWS"
+      provider         = "CodeStarSourceConnection"
       version          = "1"
       output_artifacts = ["SourceArtifact"]
 
       configuration = {
-        Owner      = var.github_owner
-        Repo       = var.repository_name
-        Branch     = "main"
-        OAuthToken = var.github_token
+        ConnectionArn    = aws_codestarconnections_connection.github.arn
+        FullRepositoryId = "${var.github_owner}/${var.repository_name}"
+        BranchName       = "main"
       }
     }
   }
@@ -159,46 +158,4 @@ resource "aws_codebuild_project" "terraform_build" {
     type      = "CODEPIPELINE"
     buildspec = file("${path.module}/buildspec.yml")
   }
-}
-
-# Variáveis
-variable "artifact_bucket" {
-  description = "Nome do bucket S3 para artefatos"
-  type        = string
-}
-
-variable "repository_name" {
-  description = "Nome do repositório GitHub"
-  type        = string
-}
-
-variable "github_owner" {
-  description = "Nome do dono do repositório GitHub"
-  type        = string
-}
-
-variable "github_token" {
-  description = "Token de acesso do GitHub"
-  type        = string
-  sensitive   = true
-}
-
-variable "codepipeline_role_arn" {
-  description = "ARN da role do CodePipeline"
-  type        = string
-}
-
-variable "codebuild_role_arn" {
-  description = "ARN da role do CodeBuild"
-  type        = string
-}
-
-variable "build_project_name" {
-  description = "Nome do projeto de build"
-  type        = string
-}
-
-variable "deploy_project_name" {
-  description = "Nome do projeto de deploy"
-  type        = string
 } 

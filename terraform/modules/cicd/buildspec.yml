@@ -3,7 +3,6 @@ version: 0.2
 env:
   variables:
     ENVIRONMENT: "prod"
-    TF_WORKSPACE: "prod"
 
 phases:
   install:
@@ -21,7 +20,6 @@ phases:
       - echo "Retrieving SSM parameters..."
       - cd terraform/environments/prod
       - aws ssm get-parameter --name "/terraform/vars" --with-decryption --query "Parameter.Value" --output text > terraform.tfvars
-      - unset TF_WORKSPACE
       - terraform init -input=false
       - terraform workspace select prod || terraform workspace new prod
       - aws ssm get-parameter --name "/prod/github/token" --with-decryption --query "Parameter.Value" --output text > github_token.txt
