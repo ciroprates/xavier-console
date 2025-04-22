@@ -11,9 +11,9 @@ phases:
       - echo "Installing dependencies..."
       - yum update -y
       - yum install -y unzip python3 python3-pip jq
-      - curl -O https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-      - unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip -d /usr/local/bin/
-      - rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+      - rpm --import https://rpm.releases.hashicorp.com/gpg
+      - yum-config-manager --add-repo https://rpm.releases.hashicorp.com/AmazonLinux/hashicorp.repo
+      - yum -y install terraform
       - pip3 install checkov
 
   pre_build:
@@ -21,19 +21,31 @@ phases:
       - echo "Retrieving SSM parameters..."
       - cd terraform/environments/prod
       - aws ssm get-parameter --name "/terraform/vars" --with-decryption --query "Parameter.Value" --output text > terraform.tfvars
-      - terraform init
+      - unset TF_WORKSPACE
+      - terraform init -input=false
+      - terraform workspace select prod || terraform workspace new prod
 
   build:
     commands:
       - echo "Running Terraform plan and apply..."
       - terraform validate
-      - terraform plan -out=tfplan
-      - terraform apply -auto-approve tfplan
+      - checkov -d .
+      - terraform plan -input=false -out=tfplan
+      - terraform show -json tfplan > plan.json
+      - |
+        if [ "$ENVIRONMENT" = "prod" ]; then
+          echo "Production deployment requires manual approval"
+          aws codepipeline get-pipeline-state --name $PIPELINE_NAME
+        else
+          terraform apply -input=false -auto-approve tfplan
+        fi
 
   post_build:
     commands:
       - echo "Cleaning up..."
-      - rm -f terraform.tfvars tfplan
+      - rm -f terraform.tfvars
+      - rm -f tfplan
+      - rm -f plan.json
 
 artifacts:
   files:
@@ -42,4 +54,5 @@ artifacts:
 
 cache:
   paths:
-    - /root/.terraform.d/**/* 
+    - '/root/.terraform.d/**/*'
+    - '/root/.cache/pip/**/*' 
