@@ -191,4 +191,14 @@ variable "codepipeline_role_arn" {
 variable "codebuild_role_arn" {
   description = "ARN da role do CodeBuild"
   type        = string
+}
+
+variable "build_project_name" {
+  description = "Nome do projeto de build"
+  type        = string
+}
+
+variable "deploy_project_name" {
+  description = "Nome do projeto de deploy"
+  type        = string
 } 

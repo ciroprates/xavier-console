@@ -62,6 +62,26 @@ build_project_name        = string
 deploy_project_name       = string
 ```
 
+## Configuração das Variáveis
+
+1. Copie o arquivo de exemplo:
+```bash
+cp terraform/environments/prod/terraform.tfvars.example terraform/environments/prod/terraform.tfvars
+```
+
+2. Edite o arquivo `terraform.tfvars` com seus valores:
+   - Substitua `your.email@example.com` pelo seu email para notificações
+   - Substitua `your-github-username` pelo seu usuário do GitHub
+   - Substitua `your-github-token` pelo seu token de acesso do GitHub
+   - Ajuste os valores de CIDR e zonas de disponibilidade conforme necessário
+   - Ajuste as configurações do ECS (tipo de instância, capacidade, etc.)
+   - Ajuste o valor do orçamento conforme necessário
+
+3. Valores sensíveis:
+   - O arquivo `terraform.tfvars` está no `.gitignore` e não deve ser versionado
+   - Tokens e credenciais devem ser mantidos seguros
+   - Considere usar AWS Secrets Manager para valores sensíveis
+
 ## Pipeline de CI/CD
 
 A pipeline é composta por três estágios:

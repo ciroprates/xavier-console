@@ -113,4 +113,38 @@ resource "aws_route_table_association" "private" {
 
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private[count.index].id
+}
+
+# Outputs
+output "vpc_id" {
+  value = aws_vpc.main.id
+}
+
+output "public_subnet_ids" {
+  value = aws_subnet.public[*].id
+}
+
+output "private_subnet_ids" {
+  value = aws_subnet.private[*].id
+}
+
+# Variables
+variable "vpc_cidr" {
+  description = "CIDR da VPC"
+  type        = string
+}
+
+variable "public_subnet_cidrs" {
+  description = "Lista de CIDRs para as subnets públicas"
+  type        = list(string)
+}
+
+variable "private_subnet_cidrs" {
+  description = "Lista de CIDRs para as subnets privadas"
+  type        = list(string)
+}
+
+variable "availability_zones" {
+  description = "Lista de zonas de disponibilidade"
+  type        = list(string)
 } 

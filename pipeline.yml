@@ -1,6 +1,18 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: 'Pipeline de CI/CD para infraestrutura Terraform'
 
+Parameters:
+  RepositoryName:
+    Type: String
+    Description: Nome do repositório GitHub
+  GitHubToken:
+    Type: String
+    Description: Token de acesso do GitHub
+    NoEcho: true
+  ArtifactBucket:
+    Type: String
+    Description: Nome do bucket S3 para artefatos
+
 Resources:
   CodePipelineRole:
     Type: AWS::IAM::Role
@@ -27,7 +39,6 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/AWSCodeBuildAdminAccess
-        - arn:aws:iam::aws:policy/AmazonSSMReadOnlyAccess
 
   BuildProject:
     Type: AWS::CodeBuild::Project
@@ -44,8 +55,6 @@ Resources:
           - Name: ENVIRONMENT
             Value: prod
           - Name: TF_WORKSPACE
-            Value: prod
-          - Name: TF_VAR_environment
             Value: prod
       Source:
         Type: CODEPIPELINE
@@ -65,12 +74,14 @@ Resources:
             - Name: Source
               ActionTypeId:
                 Category: Source
-                Owner: AWS
+                Owner: ThirdParty
                 Version: 1
-                Provider: CodeCommit
+                Provider: GitHub
               Configuration:
-                RepositoryName: !Ref RepositoryName
-                BranchName: main
+                Owner: !Sub '${GitHubOwner}'
+                Repo: !Ref RepositoryName
+                Branch: main
+                OAuthToken: !Ref GitHubToken
               OutputArtifacts:
                 - Name: SourceArtifact
               RunOrder: 1
@@ -105,23 +116,10 @@ Resources:
                 - Name: BuildArtifact
               RunOrder: 1
 
-  ArtifactBucket:
-    Type: AWS::S3::Bucket
-    Properties:
-      BucketEncryption:
-        ServerSideEncryptionConfiguration:
-          - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256
-
   ApprovalTopic:
     Type: AWS::SNS::Topic
     Properties:
       DisplayName: Terraform Pipeline Approvals
-
-Parameters:
-  RepositoryName:
-    Type: String
-    Description: Nome do repositório CodeCommit 
 
 version: 0.2
 

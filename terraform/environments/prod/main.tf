@@ -19,28 +19,30 @@ module "network" {
   vpc_cidr             = var.vpc_cidr
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
+  availability_zones   = var.availability_zones
 }
 
 # Criamos o ECS
 module "ecs" {
   source = "../../modules/ecs"
 
-  vpc_id              = module.network.vpc_id
-  public_subnet_ids   = module.network.public_subnet_ids
-  private_subnet_ids  = module.network.private_subnet_ids
-  ecs_cluster_name    = var.ecs_cluster_name
-  ecs_service_name    = var.ecs_service_name
-  ecs_task_family     = var.ecs_task_family
-  container_port      = var.container_port
-  host_port           = var.host_port
-  container_name      = var.container_name
-  container_image     = var.container_image
-  min_capacity        = var.min_capacity
-  max_capacity        = var.max_capacity
-  desired_capacity    = var.desired_capacity
-  task_execution_role_arn = module.iam.ecs_task_execution_role_arn
-  autoscale_role_arn      = module.iam.ecs_autoscale_role_arn
+  vpc_id                    = module.network.vpc_id
+  public_subnet_ids         = module.network.public_subnet_ids
+  private_subnet_ids        = module.network.private_subnet_ids
+  ecs_cluster_name         = var.ecs_cluster_name
+  ecs_instance_type        = var.ecs_instance_type
+  min_capacity             = var.min_capacity
+  max_capacity             = var.max_capacity
+  desired_capacity         = var.desired_capacity
   ecs_instance_profile_name = module.iam.ecs_instance_profile_name
+  task_execution_role_arn  = module.iam.task_execution_role_arn
+  autoscale_role_arn      = module.iam.autoscale_role_arn
+  ecs_service_name        = var.ecs_service_name
+  ecs_task_family         = var.ecs_task_family
+  container_port          = var.container_port
+  host_port              = var.host_port
+  container_name         = var.container_name
+  container_image        = var.container_image
 }
 
 # Criamos o monitoramento
@@ -68,4 +70,6 @@ module "cicd" {
   github_token         = var.github_token
   codepipeline_role_arn = module.iam.codepipeline_role_arn
   codebuild_role_arn    = module.iam.codebuild_role_arn
+  build_project_name    = var.build_project_name
+  deploy_project_name   = var.deploy_project_name
 } 
