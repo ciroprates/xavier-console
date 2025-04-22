@@ -6,4 +6,6 @@ Testando o trigger automático configurado via CloudWatch Events.
 
 Testando novamente após adicionar as permissões do CloudWatch Events.
 
-Testando com a nova conexão CodeStar. 
+Testando com a nova conexão CodeStar.
+
+Testando com a conexão CodeStar disponível. 
