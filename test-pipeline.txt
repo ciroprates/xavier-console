@@ -1,3 +1,5 @@
 Este é um arquivo de teste para verificar se a pipeline está sendo executada automaticamente após um commit na branch main.
 
-Atualização para testar o trigger automático após adicionar as permissões necessárias. 
+Atualização para testar o trigger automático após adicionar as permissões necessárias.
+
+Testando o trigger automático configurado via CloudWatch Events. 
