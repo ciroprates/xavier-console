@@ -10,7 +10,7 @@ phases:
     runtime-versions:
       python: 3.9
     commands:
-      - echo "Instalando dependências..."
+      - echo "Installing dependencies..."
       - apt-get update && apt-get install -y unzip python3 python3-pip jq
       - curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
       - apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
@@ -19,10 +19,10 @@ phases:
 
   pre_build:
     commands:
-      - cd terraform
-      - cp environments/${ENVIRONMENT}/terraform.tfvars terraform.tfvars
+      - cd terraform/environments/prod
+      - aws ssm get-parameter --name "/terraform/vars" --with-decryption --query "Parameter.Value" --output text > terraform.tfvars
       - terraform init -input=false
-      - terraform workspace select ${TF_WORKSPACE} || terraform workspace new ${TF_WORKSPACE}
+      - terraform workspace select prod || terraform workspace new prod
 
   build:
     commands:
@@ -31,7 +31,7 @@ phases:
       - terraform plan -out=tfplan
       - |
         if [ "$ENVIRONMENT" = "prod" ]; then
-          echo "Aguardando aprovação manual para produção..."
+          echo "Waiting for manual approval for production..."
         else
           terraform apply -auto-approve tfplan
         fi
