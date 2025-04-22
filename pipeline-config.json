@@ -1,0 +1,65 @@
+{
+    "pipeline": {
+        "name": "xavier-console-pipeline",
+        "roleArn": "arn:aws:iam::683684736241:role/terraform-codepipeline-role",
+        "artifactStore": {
+            "type": "S3",
+            "location": "xavier-console-artifacts"
+        },
+        "stages": [
+            {
+                "name": "Source",
+                "actions": [
+                    {
+                        "name": "Source",
+                        "actionTypeId": {
+                            "category": "Source",
+                            "owner": "AWS",
+                            "provider": "CodeStarSourceConnection",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "BranchName": "main",
+                            "ConnectionArn": "arn:aws:codestar-connections:us-east-1:683684736241:connection/c25eef64-290b-4a05-aa8e-b1f03a86b7cf",
+                            "FullRepositoryId": "ciroprates/xavier-console",
+                            "DetectChanges": "true",
+                            "OutputArtifactFormat": "CODE_ZIP"
+                        },
+                        "outputArtifacts": [
+                            {
+                                "name": "source_output"
+                            }
+                        ],
+                        "inputArtifacts": []
+                    }
+                ]
+            },
+            {
+                "name": "Build",
+                "actions": [
+                    {
+                        "name": "Build",
+                        "actionTypeId": {
+                            "category": "Build",
+                            "owner": "AWS",
+                            "provider": "CodeBuild",
+                            "version": "1"
+                        },
+                        "runOrder": 1,
+                        "configuration": {
+                            "ProjectName": "xavier-console-build"
+                        },
+                        "outputArtifacts": [],
+                        "inputArtifacts": [
+                            {
+                                "name": "source_output"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ],
+        "version": 1
+    }
+}

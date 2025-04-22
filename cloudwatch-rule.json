@@ -1,0 +1,6 @@
+{
+    "Name": "xavier-console-pipeline-trigger",
+    "EventPattern": "{\"source\":[\"aws.codestar-connections\"],\"detail-type\":[\"CodeStar Connection Push\"],\"detail\":{\"connection-arn\":[\"arn:aws:codestar-connections:us-east-1:683684736241:connection/4f866a6b-4787-409a-8593-004c245648e9\"],\"repository-name\":[\"xavier-console\"],\"branch-name\":[\"main\"]}}",
+    "State": "ENABLED",
+    "Description": "Trigger for xavier-console-pipeline on GitHub push events"
+} 
