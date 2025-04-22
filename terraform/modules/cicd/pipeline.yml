@@ -1,0 +1,45 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      python: 3.9
+    commands:
+      - echo "Instalando dependências..."
+      - apt-get update && apt-get install -y unzip python3 python3-pip jq
+      - curl -fsSL https://apt.releases.hashicorp.com/gpg | apt-key add -
+      - apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+      - apt-get update && apt-get install -y terraform
+      - pip3 install checkov
+
+  pre_build:
+    commands:
+      - cd terraform
+      - cp environments/${ENVIRONMENT}/terraform.tfvars terraform.tfvars
+      - terraform init -input=false
+      - terraform workspace select ${TF_WORKSPACE} || terraform workspace new ${TF_WORKSPACE}
+
+  build:
+    commands:
+      - terraform validate
+      - checkov -d .
+      - terraform plan -out=tfplan
+      - |
+        if [ "$ENVIRONMENT" = "prod" ]; then
+          echo "Aguardando aprovação manual para produção..."
+        else
+          terraform apply -auto-approve tfplan
+        fi
+
+  post_build:
+    commands:
+      - rm -f tfplan terraform.tfvars
+
+artifacts:
+  files:
+    - '**/*'
+  name: terraform-${ENVIRONMENT}-$(date +%Y%m%d-%H%M%S)
+
+cache:
+  paths:
+    - '/root/.terraform.d/**/*' 

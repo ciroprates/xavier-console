@@ -141,6 +141,14 @@ output "ecs_instance_profile_name" {
   value = aws_iam_instance_profile.ecs.name
 }
 
+output "task_execution_role_arn" {
+  value = aws_iam_role.ecs_task_execution_role.arn
+}
+
+output "autoscale_role_arn" {
+  value = aws_iam_role.ecs_autoscale_role.arn
+}
+
 # Variables
 variable "artifact_bucket" {
   description = "Nome do bucket S3 para artefatos"
