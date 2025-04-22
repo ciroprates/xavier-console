@@ -2,4 +2,6 @@ Este é um arquivo de teste para verificar se a pipeline está sendo executada a
 
 Atualização para testar o trigger automático após adicionar as permissões necessárias.
 
-Testando o trigger automático configurado via CloudWatch Events. 
+Testando o trigger automático configurado via CloudWatch Events.
+
+Testando novamente após adicionar as permissões do CloudWatch Events. 
