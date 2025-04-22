@@ -4,4 +4,6 @@ Atualização para testar o trigger automático após adicionar as permissões n
 
 Testando o trigger automático configurado via CloudWatch Events.
 
-Testando novamente após adicionar as permissões do CloudWatch Events. 
+Testando novamente após adicionar as permissões do CloudWatch Events.
+
+Testando com a nova conexão CodeStar. 
