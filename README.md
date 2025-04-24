@@ -1,5 +1,7 @@
 # X-Console
 
+![Pipeline Status](https://github.com/ciroprates/xavier-console/actions/workflows/main.yml/badge.svg)
+
 Projeto de infraestrutura como código usando Terraform para provisionar recursos na AWS.
 
 ## Estrutura do Projeto
