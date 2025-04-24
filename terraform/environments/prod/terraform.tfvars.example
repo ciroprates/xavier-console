@@ -27,6 +27,7 @@ repository_name           = "x-console"
 build_project_name        = "prod-build"
 deploy_project_name       = "prod-deploy"
 approval_notification_arn = "arn:aws:sns:us-east-1:123456789012:approval-notifications"
+connection_arn           = "arn:aws:codestar-connections:us-east-1:123456789012:connection/your-connection-id"
 
 # IAM
 github_owner    = "your-github-username"

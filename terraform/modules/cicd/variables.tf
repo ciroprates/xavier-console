@@ -31,4 +31,9 @@ variable "build_project_name" {
 variable "deploy_project_name" {
   description = "Nome do projeto de deploy"
   type        = string
+}
+
+variable "connection_arn" {
+  description = "ARN da conexão CodeStar com o GitHub"
+  type        = string
 } 

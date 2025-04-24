@@ -84,8 +84,8 @@ resource "aws_codepipeline" "terraform_pipeline" {
       output_artifacts = ["SourceArtifact"]
 
       configuration = {
-        ConnectionArn    = "arn:aws:codestar-connections:us-east-1:683684736241:connection/c25eef64-290b-4a05-aa8e-b1f03a86b7cf"
-        FullRepositoryId = "ciroprates/xavier-console"
+        ConnectionArn    = var.connection_arn
+        FullRepositoryId = "${var.github_owner}/${var.repository_name}"
         BranchName       = "main"
       }
     }
