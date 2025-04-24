@@ -16,21 +16,34 @@ Projeto de infraestrutura como código (IaC) usando Terraform para provisionar e
 ```
 .
 ├── README.md
-├── buildspec.yml
-├── pipeline.yml
-├── .gitignore
+├── .github/
+│   └── workflows/
+│       └── main.yml
 └── terraform/
     ├── environments/
     │   └── prod/
     │       ├── main.tf
     │       ├── terraform.tfvars
-    │       └── terraform.tfvars.example
+    │       ├── terraform.tfvars.example
+    │       └── variables.tf
     └── modules/
-        ├── cicd.tf
-        ├── ecs.tf
-        ├── iam.tf
-        ├── monitoring.tf
-        └── network.tf
+        ├── cicd/
+        │   ├── main.tf
+        │   ├── buildspec.yml
+        │   ├── pipeline.yml
+        │   └── variables.tf
+        ├── ecs/
+        │   ├── main.tf
+        │   └── variables.tf
+        ├── iam/
+        │   ├── main.tf
+        │   └── variables.tf
+        ├── monitoring/
+        │   ├── main.tf
+        │   └── variables.tf
+        └── network/
+            ├── main.tf
+            └── variables.tf
 ```
 
 ## Módulos
@@ -65,14 +78,27 @@ Projeto de infraestrutura como código (IaC) usando Terraform para provisionar e
    - Configurações do ECS
    - Limite de orçamento
 
-   > **Nota**: O arquivo `terraform.tfvars` está no `.gitignore` e não deve ser versionado.
+3. **Configurar Parameter Store**
+   ```bash
+   # Criar o parâmetro no SSM Parameter Store
+   aws ssm put-parameter \
+     --name "/terraform/vars" \
+     --type "SecureString" \
+     --value "$(cat terraform/environments/prod/terraform.tfvars)" \
+     --overwrite
+   ```
+
+   > **Nota**: O arquivo `terraform.tfvars` está no `.gitignore` e não deve ser versionado. O conteúdo é armazenado de forma segura no Parameter Store.
 
 ## Pipeline de CI/CD
 
 A pipeline é composta por três estágios:
 
 1. **Source**: Obtém o código do repositório
-2. **Build**: Valida a configuração do Terraform e gera o plano de execução
+2. **Build**: 
+   - Recupera as variáveis do Parameter Store
+   - Valida a configuração do Terraform
+   - Gera o plano de execução
 3. **Deploy**: Aplica as mudanças de forma automatizada
 
 ## Deploy
