@@ -77,7 +77,12 @@ resource "aws_codepipeline_webhook" "github" {
     json_path    = "$.ref"
     match_equals = "refs/heads/main"
   }
+
+  url = "https://${data.aws_region.current.name}.webhooks.aws.amazon.com/triggers/${aws_codepipeline_webhook.github.id}"
 }
+
+# Obter a região atual
+data "aws_region" "current" {}
 
 # Criar pipeline de infraestrutura
 resource "aws_codepipeline" "terraform_pipeline" {
