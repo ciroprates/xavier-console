@@ -8,4 +8,6 @@ Testando novamente após adicionar as permissões do CloudWatch Events.
 
 Testando com a nova conexão CodeStar.
 
-Testando com a conexão CodeStar disponível. 
+Testando com a conexão CodeStar disponível.
+
+Testando após corrigir o comando de seleção do workspace. 
