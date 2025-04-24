@@ -62,6 +62,23 @@ resource "aws_codestarconnections_connection" "github" {
   provider_type = "GitHub"
 }
 
+# Criar webhook do GitHub
+resource "aws_codepipeline_webhook" "github" {
+  name            = "github-webhook"
+  authentication  = "GITHUB_HMAC"
+  target_action   = "Source"
+  target_pipeline = aws_codepipeline.terraform_pipeline.name
+
+  authentication_configuration {
+    secret_token = var.webhook_secret
+  }
+
+  filter {
+    json_path    = "$.ref"
+    match_equals = "refs/heads/main"
+  }
+}
+
 # Criar pipeline de infraestrutura
 resource "aws_codepipeline" "terraform_pipeline" {
   name     = "terraform-infrastructure-pipeline"

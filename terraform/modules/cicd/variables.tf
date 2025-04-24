@@ -36,4 +36,10 @@ variable "deploy_project_name" {
 variable "connection_arn" {
   description = "ARN da conexão CodeStar com o GitHub"
   type        = string
+}
+
+variable "webhook_secret" {
+  description = "Secret para o webhook do GitHub"
+  type        = string
+  sensitive   = true
 } 
