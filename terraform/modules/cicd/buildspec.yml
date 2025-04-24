@@ -21,7 +21,8 @@ phases:
       - cd terraform/environments/prod
       - aws ssm get-parameter --name "/terraform/vars" --with-decryption --query "Parameter.Value" --output text > terraform.tfvars
       - terraform init -input=false
-      - terraform workspace select prod || terraform workspace new prod
+      - terraform workspace new prod || true
+      - terraform workspace select prod
 
   build:
     commands:

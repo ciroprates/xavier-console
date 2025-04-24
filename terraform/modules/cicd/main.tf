@@ -56,13 +56,13 @@ resource "aws_codebuild_project" "deploy" {
   }
 }
 
-# CodeStar Connection for GitHub
+# Criar conexão com o GitHub
 resource "aws_codestarconnections_connection" "github" {
   name          = "github-connection"
   provider_type = "GitHub"
 }
 
-# Pipeline de CI/CD
+# Criar pipeline de infraestrutura
 resource "aws_codepipeline" "terraform_pipeline" {
   name     = "terraform-infrastructure-pipeline"
   role_arn = var.codepipeline_role_arn
@@ -84,8 +84,8 @@ resource "aws_codepipeline" "terraform_pipeline" {
       output_artifacts = ["SourceArtifact"]
 
       configuration = {
-        ConnectionArn    = aws_codestarconnections_connection.github.arn
-        FullRepositoryId = "${var.github_owner}/${var.repository_name}"
+        ConnectionArn    = "arn:aws:codestar-connections:us-east-1:683684736241:connection/c25eef64-290b-4a05-aa8e-b1f03a86b7cf"
+        FullRepositoryId = "ciroprates/xavier-console"
         BranchName       = "main"
       }
     }
@@ -99,9 +99,9 @@ resource "aws_codepipeline" "terraform_pipeline" {
       category         = "Build"
       owner            = "AWS"
       provider         = "CodeBuild"
-      version          = "1"
       input_artifacts  = ["SourceArtifact"]
       output_artifacts = ["BuildArtifact"]
+      version          = "1"
 
       configuration = {
         ProjectName = aws_codebuild_project.terraform_build.name
@@ -117,8 +117,8 @@ resource "aws_codepipeline" "terraform_pipeline" {
       category        = "Build"
       owner           = "AWS"
       provider        = "CodeBuild"
-      version         = "1"
       input_artifacts = ["BuildArtifact"]
+      version         = "1"
 
       configuration = {
         ProjectName = aws_codebuild_project.terraform_build.name

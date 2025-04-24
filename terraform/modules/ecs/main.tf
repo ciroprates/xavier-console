@@ -3,6 +3,22 @@ resource "aws_ecs_cluster" "main" {
   name = var.ecs_cluster_name
 }
 
+# Buscar AMI do ECS
+data "aws_ami" "ecs" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-ecs-hvm-*-x86_64-ebs"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
 # Criar launch template
 resource "aws_launch_template" "ecs" {
   name_prefix   = "ecs-launch-template-"
@@ -36,11 +52,6 @@ resource "aws_autoscaling_group" "ecs" {
   min_size           = var.min_capacity
   max_size           = var.max_capacity
   desired_capacity   = var.desired_capacity
-
-  launch_template {
-    id      = aws_launch_template.ecs.id
-    version = "$Latest"
-  }
 
   mixed_instances_policy {
     instances_distribution {
@@ -148,22 +159,6 @@ resource "aws_ecs_service" "app" {
     target_group_arn = var.target_group_arn
     container_name   = var.container_name
     container_port   = var.container_port
-  }
-}
-
-# Data source para AMI do ECS
-data "aws_ami" "ecs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-ecs-hvm-*-arm64-ebs"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
   }
 }
 

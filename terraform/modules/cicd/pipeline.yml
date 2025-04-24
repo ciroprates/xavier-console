@@ -17,7 +17,7 @@ phases:
       - cd terraform
       - cp environments/${ENVIRONMENT}/terraform.tfvars terraform.tfvars
       - terraform init -input=false
-      - terraform workspace select ${TF_WORKSPACE} || terraform workspace new ${TF_WORKSPACE}
+      - terraform workspace select ${TF_WORKSPACE}
 
   build:
     commands:
