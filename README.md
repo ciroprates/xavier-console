@@ -101,6 +101,65 @@ A pipeline é composta por três estágios:
    - Gera o plano de execução
 3. **Deploy**: Aplica as mudanças de forma automatizada
 
+## Configuração de Webhooks
+
+Para configurar os webhooks da pipeline com AWS CLI, siga os passos abaixo:
+
+1. **Obter o ARN e URL do webhook**
+   ```bash
+   # Lista os webhooks existentes
+   aws codepipeline list-webhooks
+
+   # Ou crie um novo webhook
+   aws codepipeline create-webhook \
+     --cli-input-json '{
+       "webhook": {
+         "name": "x-console-webhook",
+         "targetPipeline": "x-console-pipeline",
+         "targetAction": "Source",
+         "filters": [{
+           "jsonPath": "$.ref",
+           "matchEquals": "refs/heads/main"
+         }],
+         "authentication": "GITHUB_HMAC",
+         "authenticationConfiguration": {
+           "SecretToken": "seu-token-secreto"
+         }
+       }
+     }'
+
+   # Obter a URL do webhook
+   aws codepipeline get-webhook \
+     --webhook-name "x-console-webhook" \
+     --query 'webhook.url' \
+     --output text
+   ```
+
+2. **Registrar o webhook no GitHub**
+   ```bash
+   # Registra o webhook no GitHub usando o ARN obtido
+   aws codepipeline register-webhook-with-third-party \
+     --webhook-name "x-console-webhook"
+
+   # Configure o webhook no GitHub usando a URL obtida
+   # Acesse: https://github.com/seu-usuario/seu-repositorio/settings/hooks
+   # Clique em "Add webhook"
+   # Cole a URL do webhook no campo "Payload URL"
+   # Selecione "application/json" como Content type
+   # Cole o mesmo Secret Token usado na criação do webhook
+   # Selecione "Just the push event"
+   # Clique em "Add webhook"
+   ```
+
+3. **Verificar status do webhook**
+   ```bash
+   # Verifica se o webhook está ativo
+   aws codepipeline get-webhook \
+     --webhook-name "x-console-webhook"
+   ```
+
+> **Nota**: Substitua `seu-token-secreto` por um token seguro gerado para seu webhook. O token deve ser armazenado de forma segura.
+
 ## Deploy
 
 - Faça commit das alterações na branch main
