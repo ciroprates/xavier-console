@@ -42,6 +42,24 @@ resource "aws_autoscaling_group" "ecs" {
     version = "$Latest"
   }
 
+  mixed_instances_policy {
+    instances_distribution {
+      on_demand_percentage_above_base_capacity = 0
+      spot_allocation_strategy                 = "capacity-optimized"
+    }
+
+    launch_template {
+      launch_template_specification {
+        launch_template_id = aws_launch_template.ecs.id
+        version           = "$Latest"
+      }
+
+      override {
+        instance_type = var.ecs_instance_type
+      }
+    }
+  }
+
   health_check_type         = "EC2"
   health_check_grace_period = "300"
 
@@ -140,7 +158,7 @@ data "aws_ami" "ecs" {
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-ecs-hvm-*-x86_64-ebs"]
+    values = ["amzn2-ami-ecs-hvm-*-arm64-ebs"]
   }
 
   filter {
@@ -173,7 +191,7 @@ variable "ecs_cluster_name" {
 variable "ecs_instance_type" {
   description = "Tipo de instância EC2 para o ECS"
   type        = string
-  default     = "t3.micro"
+  default     = "t4g.nano"
 }
 
 variable "min_capacity" {
