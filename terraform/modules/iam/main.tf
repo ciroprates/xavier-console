@@ -21,7 +21,7 @@ data "aws_iam_role" "ecs_autoscale_role" {
   name = var.ecs_autoscale_role_name
 }
 
-data "aws_iam_role" "ecs" {
+data "aws_iam_role" "ecs_role" {
   name = var.ecs_role_name
 }
 

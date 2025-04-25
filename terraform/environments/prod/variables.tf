@@ -1,144 +1,174 @@
 variable "vpc_cidr" {
-  description = "CIDR block da VPC"
+  description = "CIDR block for VPC"
   type        = string
 }
 
 variable "public_subnet_cidrs" {
-  description = "Lista de CIDR blocks para subnets públicas"
+  description = "CIDR blocks for public subnets"
   type        = list(string)
 }
 
 variable "private_subnet_cidrs" {
-  description = "Lista de CIDR blocks para subnets privadas"
+  description = "CIDR blocks for private subnets"
   type        = list(string)
 }
 
 variable "availability_zones" {
-  description = "Lista de zonas de disponibilidade"
+  description = "Availability zones"
   type        = list(string)
 }
 
 variable "ecs_cluster_name" {
-  description = "Nome do cluster ECS"
+  description = "Name of the ECS cluster"
   type        = string
 }
 
 variable "ecs_instance_type" {
-  description = "Tipo de instância EC2 para o ECS"
+  description = "Instance type for ECS container instances"
   type        = string
 }
 
 variable "min_capacity" {
-  description = "Capacidade mínima do Auto Scaling Group"
+  description = "Minimum number of instances in the ECS cluster"
   type        = number
 }
 
 variable "max_capacity" {
-  description = "Capacidade máxima do Auto Scaling Group"
+  description = "Maximum number of instances in the ECS cluster"
   type        = number
 }
 
 variable "desired_capacity" {
-  description = "Capacidade desejada do Auto Scaling Group"
+  description = "Desired number of instances in the ECS cluster"
   type        = number
 }
 
 variable "ecs_service_name" {
-  description = "Nome do serviço ECS"
+  description = "Name of the ECS service"
   type        = string
 }
 
 variable "ecs_task_family" {
-  description = "Nome da família de tasks do ECS"
+  description = "Name of the ECS task family"
   type        = string
 }
 
 variable "container_port" {
-  description = "Porta do container"
+  description = "Port exposed by the container"
   type        = number
 }
 
 variable "host_port" {
-  description = "Porta do host"
+  description = "Port exposed by the host"
   type        = number
 }
 
 variable "container_name" {
-  description = "Nome do container"
+  description = "Name of the container"
   type        = string
 }
 
 variable "container_image" {
-  description = "Imagem do container"
-  type        = string
-}
-
-variable "budget_amount" {
-  description = "Valor do orçamento mensal"
-  type        = number
-}
-
-variable "email_addresses" {
-  description = "Lista de endereços de email para notificações"
-  type        = list(string)
-}
-
-variable "artifact_bucket" {
-  description = "Nome do bucket S3 para artefatos"
-  type        = string
-}
-
-variable "repository_name" {
-  description = "Nome do repositório GitHub"
-  type        = string
-}
-
-variable "github_owner" {
-  description = "Nome do dono do repositório GitHub"
-  type        = string
-}
-
-variable "build_project_name" {
-  description = "Nome do projeto de build"
-  type        = string
-}
-
-variable "deploy_project_name" {
-  description = "Nome do projeto de deploy"
-  type        = string
-}
-
-variable "approval_notification_arn" {
-  description = "ARN do tópico SNS para notificações de aprovação"
+  description = "Docker image for the container"
   type        = string
 }
 
 variable "target_group_arn" {
-  description = "ARN do target group existente"
+  description = "ARN of the target group"
+  type        = string
+}
+
+variable "budget_amount" {
+  description = "Budget amount in USD"
+  type        = number
+}
+
+variable "email_addresses" {
+  description = "Email addresses for budget notifications"
+  type        = list(string)
+}
+
+variable "artifact_bucket" {
+  description = "Name of the S3 bucket to store artifacts"
+  type        = string
+}
+
+variable "repository_name" {
+  description = "Name of the GitHub repository"
+  type        = string
+}
+
+variable "github_owner" {
+  description = "GitHub repository owner"
+  type        = string
+}
+
+variable "build_project_name" {
+  description = "Name of the CodeBuild project for building"
+  type        = string
+}
+
+variable "deploy_project_name" {
+  description = "Name of the CodeBuild project for deploying"
+  type        = string
+}
+
+variable "webhook_secret" {
+  description = "Secret token for GitHub webhook"
+  type        = string
+}
+
+variable "connection_arn" {
+  description = "ARN of the CodeStar connection to GitHub"
   type        = string
 }
 
 variable "ecs_role_name" {
-  description = "Nome do role ECS existente"
+  description = "Name of the ECS role"
   type        = string
 }
 
 variable "codepipeline_role_name" {
-  description = "Nome do role CodePipeline existente"
+  description = "Name of the CodePipeline role"
   type        = string
 }
 
 variable "codebuild_role_name" {
-  description = "Nome do role CodeBuild existente"
+  description = "Name of the CodeBuild role"
   type        = string
 }
 
 variable "ecs_task_execution_role_name" {
-  description = "Nome do role de execução de tasks ECS existente"
+  description = "Name of the ECS task execution role"
   type        = string
 }
 
 variable "ecs_autoscale_role_name" {
-  description = "Nome do role de auto-scaling ECS existente"
+  description = "Name of the ECS autoscale role"
+  type        = string
+}
+
+variable "codepipeline_role_arn" {
+  description = "ARN of the CodePipeline role"
+  type        = string
+}
+
+variable "codebuild_role_arn" {
+  description = "ARN of the CodeBuild role"
+  type        = string
+}
+
+variable "ecs_role_arn" {
+  description = "ARN of the ECS role"
+  type        = string
+}
+
+variable "ecs_task_execution_role_arn" {
+  description = "ARN of the ECS task execution role"
+  type        = string
+}
+
+variable "ecs_autoscale_role_arn" {
+  description = "ARN of the ECS autoscale role"
   type        = string
 } 

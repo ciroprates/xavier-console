@@ -22,28 +22,37 @@ module "network" {
   availability_zones   = var.availability_zones
 }
 
+# Criamos o ALB
+module "alb" {
+  source = "../../modules/alb"
+
+  vpc_id            = module.network.vpc_id
+  public_subnet_ids = module.network.public_subnet_ids
+  container_port    = var.container_port
+}
+
 # Criamos o ECS
 module "ecs" {
   source = "../../modules/ecs"
 
-  vpc_id                    = module.network.vpc_id
-  public_subnet_ids         = module.network.public_subnet_ids
-  private_subnet_ids        = module.network.private_subnet_ids
   ecs_cluster_name         = var.ecs_cluster_name
   ecs_instance_type        = var.ecs_instance_type
   min_capacity             = var.min_capacity
   max_capacity             = var.max_capacity
   desired_capacity         = var.desired_capacity
-  ecs_instance_profile_name = module.iam.ecs_instance_profile_name
-  task_execution_role_arn  = module.iam.task_execution_role_arn
-  autoscale_role_arn      = module.iam.autoscale_role_arn
+  vpc_id                   = module.network.vpc_id
+  private_subnet_ids       = module.network.private_subnet_ids
   ecs_service_name        = var.ecs_service_name
   ecs_task_family         = var.ecs_task_family
   container_port          = var.container_port
   host_port              = var.host_port
   container_name         = var.container_name
   container_image        = var.container_image
-  target_group_arn       = var.target_group_arn
+  target_group_arn       = module.alb.target_group_arn
+  ecs_role_arn           = var.ecs_role_arn
+  ecs_task_execution_role_arn = var.ecs_task_execution_role_arn
+  ecs_autoscale_role_arn  = var.ecs_autoscale_role_arn
+  alb_security_group_id   = module.alb.alb_security_group_id
 }
 
 # Criamos o monitoramento
@@ -73,8 +82,15 @@ module "cicd" {
   artifact_bucket       = var.artifact_bucket
   repository_name       = var.repository_name
   github_owner         = var.github_owner
-  codepipeline_role_arn = module.iam.codepipeline_role_arn
-  codebuild_role_arn    = module.iam.codebuild_role_arn
+  codepipeline_role_arn = var.codepipeline_role_arn
+  codebuild_role_arn    = var.codebuild_role_arn
   build_project_name    = var.build_project_name
   deploy_project_name   = var.deploy_project_name
+  webhook_secret        = var.webhook_secret
+  connection_arn        = var.connection_arn
+}
+
+# Outputs
+output "alb_dns_name" {
+  value = module.alb.alb_dns_name
 } 

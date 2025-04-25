@@ -22,15 +22,9 @@ phases:
       - aws ssm get-parameter --name "/terraform/vars" --with-decryption --query "Parameter.Value" --output text > terraform.tfvars
       - terraform init -input=false
       - |
-        # Unset TF_WORKSPACE to allow workspace management
+        # Unset TF_WORKSPACE and manage workspace
         unset TF_WORKSPACE
-        if ! terraform workspace list | grep -q "prod"; then
-          echo "Creating prod workspace..."
-          terraform workspace new prod
-        else
-          echo "Workspace prod already exists"
-        fi
-      - terraform workspace select prod
+        terraform workspace new prod
 
   build:
     commands:

@@ -52,7 +52,7 @@ resource "aws_codebuild_project" "deploy" {
 
   source {
     type      = "CODEPIPELINE"
-    buildspec = file("${path.module}/pipeline.yml")
+    buildspec = file("${path.module}/buildspec.yml")
   }
 }
 
@@ -77,8 +77,6 @@ resource "aws_codepipeline_webhook" "github" {
     json_path    = "$.ref"
     match_equals = "refs/heads/main"
   }
-
-  url = "https://${data.aws_region.current.name}.webhooks.aws.amazon.com/triggers/${aws_codepipeline_webhook.github.id}"
 }
 
 # Obter a região atual
@@ -126,7 +124,7 @@ resource "aws_codepipeline" "terraform_pipeline" {
       version          = "1"
 
       configuration = {
-        ProjectName = aws_codebuild_project.terraform_build.name
+        ProjectName = aws_codebuild_project.build.name
       }
     }
   }
@@ -143,7 +141,7 @@ resource "aws_codepipeline" "terraform_pipeline" {
       version         = "1"
 
       configuration = {
-        ProjectName = aws_codebuild_project.terraform_build.name
+        ProjectName = aws_codebuild_project.deploy.name
       }
     }
   }
